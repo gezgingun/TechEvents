@@ -41,11 +41,11 @@ npm install
 npm run serve
 ```
 
-Then open the URL Eleventy prints (defaults to `http://localhost:8080/TechEventTracker/`).
+Then open the URL Eleventy prints (defaults to `http://localhost:8080/TechEvents/`).
 
 ## Publishing
 
-1. Create a GitHub repo (suggested name: `TechEventTracker`).
+1. Create a GitHub repo (suggested name: `TechEvents`, to match the configured `pathPrefix`).
 2. Update `_data/site.js` with your `<user>.github.io` origin and the repo path prefix (or `/` if the repo is named `<user>.github.io`).
 3. Push to `main` &mdash; the workflow at `.github/workflows/deploy.yml` builds and publishes the site.
 4. Enable GitHub Pages → Source: GitHub Actions in repo settings.

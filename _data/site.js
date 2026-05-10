@@ -10,7 +10,7 @@
 //        PATH_PREFIX  = "/<repo>/"   (must start AND end with "/")
 
 const ORIGIN = "https://gezgingun.github.io";
-const PATH_PREFIX = "/TechEventTracker/";
+const PATH_PREFIX = "/TechEvents/";
 
 module.exports = {
   origin: ORIGIN,
