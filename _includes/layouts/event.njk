@@ -1,0 +1,17 @@
+---
+layout: layouts/base.njk
+---
+<article>
+<h1>{{ title }}</h1>
+<p class="event-meta">
+  <strong>{{ eventDate | eventDate }}</strong>
+  {%- if location %} &middot; {{ location }}{% endif -%}
+  {%- if region %} &middot; {{ region }}{% endif -%}
+</p>
+{{ content | safe }}
+<p class="event-links">
+  {%- if website %}<a href="{{ website }}" target="_blank" rel="noopener">Official site &rarr;</a>{% endif -%}
+  {%- if tickets %} <a href="{{ tickets }}" target="_blank" rel="noopener">Tickets &rarr;</a>{% endif -%}
+</p>
+</article>
+<p><a href="{% if pageType == 'netherlands' %}{{ '/' | absUrl }}{% else %}{{ '/europe/' | absUrl }}{% endif %}">&larr; Back to {{ region }}</a></p>

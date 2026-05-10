@@ -1,0 +1,30 @@
+---
+layout: layouts/base.njk
+permalink: /index.html
+title: Tech Event Tracker — Netherlands
+pageType: netherlands
+---
+<h1>Netherlands</h1>
+<p>Upcoming on-site technology events in the Netherlands, soonest first.</p>
+
+{% set list = collections.netherlands | upcomingByDate %}
+{% if list.length === 0 %}
+<p><em>No upcoming Netherlands events tracked yet.</em></p>
+{% else %}
+<ul class="event-list">
+{% for e in list %}
+  <li>
+    <div class="event-title"><a href="{{ e.url | absUrl }}">{{ e.data.title }}</a></div>
+    <div class="event-meta">
+      <time datetime="{{ e.data.eventDate | isoDate }}">{{ e.data.eventDate | eventDate }}</time>
+      {%- if e.data.location %} &middot; {{ e.data.location }}{% endif -%}
+    </div>
+    {%- if e.data.description %}<p class="event-desc">{{ e.data.description }}</p>{% endif %}
+    <p class="event-links">
+      {%- if e.data.website %}<a href="{{ e.data.website }}" target="_blank" rel="noopener">Official site &rarr;</a>{% endif -%}
+      {%- if e.data.tickets %} <a href="{{ e.data.tickets }}" target="_blank" rel="noopener">Tickets &rarr;</a>{% endif -%}
+    </p>
+  </li>
+{% endfor %}
+</ul>
+{% endif %}
