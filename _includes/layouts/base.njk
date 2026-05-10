@@ -37,15 +37,16 @@
     <a href="{{ '/about/' | absUrl }}">About</a>
   </span>
 </nav>
-<p class="tagline">On-site technology events &mdash; soonest first.</p>
+<p class="tagline">On-site technology events &mdash; soonest first. Don't forget to follow <a href="https://www.instagram.com/gunseli_in_tech/" target="_blank" rel="noopener noreferrer">@gunseli_in_tech</a> on Instagram.</p>
 <nav class="tabs" aria-label="Region">
   <a href="{{ '/' | absUrl }}"{% if pageType == "netherlands" %} class="active" aria-current="page"{% endif %}>Netherlands</a>
   <a href="{{ '/europe/' | absUrl }}"{% if pageType == "europe" %} class="active" aria-current="page"{% endif %}>Europe</a>
 </nav>
 {{ content | safe }}
 <footer>
-  <p>Curated with AI assistance. Always confirm dates and tickets on the official event website before booking travel.</p>
-  <p><a href="{{ '/about/' | absUrl }}">About</a></p>
+  <p>Last updated {{ lastUpdate.date }}. Curated with AI assistance &mdash; always confirm dates and tickets on the official event website before booking travel.</p>
+  <p><a href="{{ '/about/' | absUrl }}">About</a> &middot; <a href="https://www.instagram.com/gunseli_in_tech/" target="_blank" rel="noopener noreferrer">@gunseli_in_tech</a></p>
 </footer>
+<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "19741b636c4340bd8c3dcb3087d8e507"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>

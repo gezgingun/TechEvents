@@ -20,30 +20,37 @@ Invoke when the user asks to:
 ### Full-refresh run
 1. **Determine today** from the conversation context (`currentDate`). All "upcoming" filtering is done relative to this date.
 2. **Run housekeeping first** (see [Retention](#retention) below) so the next steps see a clean tree.
-3. **Search for upcoming events** in two passes:
+3. **Read the existing tree** before fetching: `Glob('netherlands/*.md')` and `Glob('europe/*.md')`, and `Read` each file's frontmatter into memory. This is what lets you **update in place** instead of producing duplicate files (see [Update-in-place rules](#update-in-place-rules) below).
+4. **Search for upcoming events** in two passes:
    - **Netherlands pass.** Use `WebSearch` and/or `WebFetch` against:
      - Aggregators: techmeetups.nl, dutchitchannel.nl, techleap.nl events page, eventbrite.com (Netherlands tech category), meetup.com (Amsterdam/Rotterdam/Utrecht/Eindhoven/The Hague tech), 10times.com (NL).
      - Known recurring NL events (verify they are still scheduled): TNW Conference (Amsterdam), Web Summit Amsterdam (if running), Devoxx UK is **not** NL &mdash; goes in Europe; Techorama (Antwerp) is **not** NL &mdash; goes in Europe; **Code Motion Amsterdam**, **GOTO Amsterdam**, **DevWorld Conference Amsterdam**, **WeAreDevelopers** (when in NL), **AI Summit Amsterdam**, **Money 20/20 Europe** (Amsterdam), **Cyber Security Week** (The Hague), **High Tech Campus Eindhoven** events, **Bits&amp;Chips Event** (Eindhoven), **ISC West** &mdash; not NL.
    - **Europe pass.** Same approach for the rest of Europe. Reach for:
      - Aggregators: 10times.com (Europe tech), confs.tech, dev.events (europe), eventbrite Europe tech, devevents.com.
      - Known recurring events: **Web Summit** (Lisbon), **Slush** (Helsinki), **VivaTech** (Paris), **Mobile World Congress / 4YFN** (Barcelona), **Bits &amp; Pretzels** (Munich), **DLD Munich**, **OFFF** (Barcelona), **WeAreDevelopers World Congress** (Berlin/Vienna), **Devoxx** (Antwerp/Paris/UK), **GOTO Copenhagen / Berlin / Aarhus**, **DroidCon** (London/Berlin/Lisbon/Italy), **FOSDEM** (Brussels), **PyCon** chapters (DE/IT/UK/etc), **Black Hat Europe** (London), **CCC / 38C3 / 39C3** (Hamburg), **NDC** (Oslo/London/Copenhagen/Porto), **Disrupt Berlin** (if running), **Reaktor Breakpoint**, **Latitude59** (Tallinn), **BalticBridge**, **Pirate Summit** (Cologne), **Codemotion Milan / Rome / Madrid**, **AI &amp; Big Data Expo Europe** (Amsterdam &mdash; if Amsterdam, that's NL), **InfoSecurity Europe** (London), **CYBERUK**, **Wikimania** (when in Europe).
-4. **For each event found**, capture:
+5. **For each event found**, capture:
    - **Title** (use the official short name)
    - **Date** &mdash; for multi-day events, use the **start date** for filename and frontmatter `eventDate`. Note the full range in the body.
    - **City, Country** (location)
    - **Short description** (1&ndash;3 sentences &mdash; what is it, who is it for)
    - **Official website URL**
    - **Ticket / registration URL** (omit if there isn't one separate from the official site)
-5. **Deduplicate** across sources by title + date.
-6. **Decide region.** If the city is in the Netherlands, the file goes in `netherlands/`. Otherwise the file goes in `europe/`. **Never put the same event in both folders.**
-7. **Write one markdown file per event** following the [File Format](#file-format) below.
-8. **Print a summary**: `Wrote N Netherlands events, M Europe events. Earliest: <title> on <date>.`
+6. **Deduplicate** across sources by title + date.
+7. **Decide region.** If the city is in the Netherlands, the file goes in `netherlands/`. Otherwise the file goes in `europe/`. **Never put the same event in both folders.**
+8. **Reconcile each event against the existing tree** using the [Update-in-place rules](#update-in-place-rules) &mdash; create new files only when no existing file matches; otherwise update or rename.
+9. **Bump the last-updated timestamp.** Write today's date (`YYYY-MM-DD`) into `_data/lastUpdate.json` so the site footer reflects this run. Format:
+   ```json
+   { "date": "YYYY-MM-DD" }
+   ```
+10. **Print a summary**: `Wrote N new, updated M, renamed K, removed L. Earliest upcoming: <title> on <date>. Last update: <today>.`
 
 ### Single-event add
 If the user asks "add &lt;event name&gt;":
 1. Confirm the date and city via `WebFetch` on the official URL the user gives you (or `WebSearch` for it if not provided).
 2. Pick the region folder based on the city.
-3. Write the file. Do not touch other files.
+3. Apply the [Update-in-place rules](#update-in-place-rules) &mdash; if a file for the same event already exists, **update it** rather than writing a duplicate.
+4. Bump `_data/lastUpdate.json` to today's date.
+5. Print which file was written / updated.
 
 ## File Format
 
@@ -77,6 +84,28 @@ The frontmatter fields are consumed by the templates:
 - `website` &mdash; "Official site" link.
 - `tickets` &mdash; "Tickets" link.
 - `description` &mdash; teaser shown on the index page (don't repeat the title).
+
+## Update-in-place rules
+
+When reconciling a found event against the existing tree, **never blindly create a new file if one might already exist** for the same event. Walk this decision tree:
+
+1. **Match an existing file.** Iterate `netherlands/*.md` and `europe/*.md`. A file matches when *any* of these are true:
+   - The frontmatter `website` URL is the same (canonicalise: strip trailing `/`, lowercase the host, ignore `?utm_*` params) &mdash; **strongest signal.**
+   - The frontmatter `title` is the same after lower-casing and stripping the trailing year (e.g. "Web Summit 2026" ≡ "Web Summit").
+   - The slug portion of the filename matches (e.g. both files end with `_web-summit-lisbon.md`) **and** the city in `location` matches.
+
+   If multiple files match, prefer the one whose `eventDate` is closest to the newly-found date. If none match, this is a **new event** &mdash; write a fresh file using the [File Format](#file-format) below.
+
+2. **Compare fields.** If a file matches, diff the existing frontmatter + body against the freshly-fetched values. Treat these as the authoritative fields: `title`, `eventDate`, `location`, `website`, `tickets`, `description`, plus the body. If **nothing has changed**, leave the file untouched (do **not** rewrite it just to refresh a timestamp &mdash; that creates pointless git churn).
+
+3. **Update in place** if any field changed:
+   - **Same `eventDate`:** rewrite the existing file via `Edit` (or `Write` if multiple fields shift). Keep the filename. Don't touch fields you didn't refresh.
+   - **`eventDate` changed:** the filename's `YYYY-MM-DD` prefix is wrong. **Rename**: write the new file at `<region>/<new-date>_<slug>.md`, then delete the old file. The slug stays the same unless the official event name itself changed materially. Print `Renamed <old> &rarr; <new>`.
+   - **Region changed** (rare &mdash; e.g. an event moved from Amsterdam to Brussels): write the new file in the *new* region folder and delete the old file in the previous one. Print `Moved <title> from <old-region>/ to <new-region>/`.
+
+4. **Stale files** (events that exist in the tree but were *not* re-found in this run) are **not** automatically deleted &mdash; the agent's web search may simply have missed them. Only the [Retention](#retention) step removes files, and only based on the date prefix. If you have explicit evidence an event was cancelled (e.g. the official site says so), delete it and note it in the run summary.
+
+5. **Idempotency check.** A second back-to-back run with no upstream changes should write zero files and rename zero files. If you find yourself rewriting unchanged files, your diff logic is wrong &mdash; fix the comparison, don't paper over it.
 
 ## Retention
 
