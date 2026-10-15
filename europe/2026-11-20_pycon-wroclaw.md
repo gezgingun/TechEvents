@@ -6,4 +6,4 @@ website: https://www.python.org/events/python-events/2199/
 description: Polish Python conference — community talks and workshops on Python applications, web development and data science.
 ---
 
-November 20, 2026 in Wrocław. Polish Python community event with technical sessions and hands-on workshops.
+November 20-21 in Wroclaw. The two-day event includes a pre-conference day, talks, workshops and networking.
